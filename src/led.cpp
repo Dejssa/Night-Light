@@ -37,6 +37,5 @@ void fadeBrightness(int delayTime) {
         FastLED.show();
         delay(delayTime);
     }
-    delay(delayTime);
     FastLED.show();
 }
