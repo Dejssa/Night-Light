@@ -23,19 +23,7 @@ void fillWithColor(int r, int g, int b) {
   FastLED.show();
 }
 
-void lightUp() {
-    for(int i = BRIGHTNESS; i > 0; i--) {
-        FastLED.setBrightness(i);
-        FastLED.delay(DELAY_DOWN_BRIGHT);
-        delay(DELAY_DOWN_BRIGHT);
-    }
-}
-
-void fadeBrightness(int delayTime) {
-    for(int i = BRIGHTNESS; i >= 0; i-=1) {
-        FastLED.setBrightness(i);
-        FastLED.show();
-        delay(delayTime);
-    }
+void setBrightness(int val) {
+    FastLED.setBrightness(val);
     FastLED.show();
 }

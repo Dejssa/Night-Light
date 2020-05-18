@@ -3,14 +3,17 @@
 #include <const.h>
 #include <led.h>
 
+int _current_brightness = -1;
+bool raised = false;
 
-void detectsMovement();
+void IRAM_ATTR movementDetected();
 void turnOnNotification();
-
 
 void setup() {
   Serial.begin(9600); 
-  pinMode(PIN_MOTION, INPUT);
+
+  pinMode(PIN_MOTION, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(PIN_MOTION), movementDetected, CHANGE);
 
   initLed();
 
@@ -19,11 +22,19 @@ void setup() {
 }
 
 void loop() {
-
-  if(digitalRead(PIN_MOTION) == HIGH) {
-    detectsMovement();
+  if (raised) {
+    setBrightness(_current_brightness);
+  } else if (_current_brightness > -1) {
+    delay(DELAY_DETECTED);
+    for(; _current_brightness >= 0; _current_brightness-=1) {
+      if (raised) {
+        _current_brightness = BRIGHTNESS;
+        break;
+      }
+      setBrightness(_current_brightness);
+      delay(DELAY_DOWN_BRIGHT);
+    }
   }
-
 }
 
 void turnOnNotification() {
@@ -37,12 +48,7 @@ void turnOnNotification() {
   delay(DELAY_TURN_ON);
 }
 
-
-// Checks if motion was detected, sets LED HIGH and starts a timer
-void detectsMovement() {
-  FastLED.setBrightness(BRIGHTNESS);
-  FastLED.show();
-
-  delay(DELAY_DETECTED);
-  fadeBrightness(DELAY_DOWN_BRIGHT);
+void movementDetected() {
+  raised = digitalRead(PIN_MOTION) == HIGH;
+  _current_brightness = BRIGHTNESS;
 }
