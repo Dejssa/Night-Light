@@ -3,15 +3,17 @@
 #include <const.h>
 #include <led.h>
 
-int _current_brightness = -1;
-bool raised = false;
+int _current_brightness = 0;
+bool isRaised = false;
+unsigned long fading = 0;
+unsigned long raising = 0;
+
 
 void IRAM_ATTR movementDetected();
 void turnOnNotification();
 
 void setup() {
   Serial.begin(9600); 
-
   pinMode(PIN_MOTION, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PIN_MOTION), movementDetected, CHANGE);
 
@@ -22,18 +24,24 @@ void setup() {
 }
 
 void loop() {
-  if (raised) {
-    setBrightness(_current_brightness);
-  } else if (_current_brightness > -1) {
-    delay(DELAY_DETECTED);
-    for(; _current_brightness >= 0; _current_brightness-=1) {
-      if (raised) {
-        _current_brightness = BRIGHTNESS;
-        break;
-      }
+  if (isRaised) {
+    if (_current_brightness != BRIGHTNESS) {
+      _current_brightness = BRIGHTNESS;
       setBrightness(_current_brightness);
-      delay(DELAY_DOWN_BRIGHT);
+      raising = millis();
     }
+
+    if (raising + RAISE_STATUS_UPDATE < millis()) {
+      raising = millis();
+    }
+  } else {
+    if (raising + DELAY_DETECTED < millis()) {
+      if (fading + DELAY_DOWN_BRIGHT < millis() && _current_brightness > 0) {
+        _current_brightness -= 1;
+        setBrightness(_current_brightness);
+        fading = millis();
+      } 
+    } 
   }
 }
 
@@ -49,6 +57,5 @@ void turnOnNotification() {
 }
 
 void movementDetected() {
-  raised = digitalRead(PIN_MOTION) == HIGH;
-  _current_brightness = BRIGHTNESS;
+  isRaised = digitalRead(PIN_MOTION) == HIGH;
 }
